@@ -1,0 +1,23 @@
+# python
+__pycache__
+
+# vscode
+/.vscode/
+
+# 过滤文件夹
+temp
+test_labelme
+
+# 过滤文件
+
+# 过滤图像视频数据
+*.json
+*.tif
+*.png
+*.jpg
+*.jpeg
+*.mp4
+*.avi
+*.zip
+*.txt
+*.log

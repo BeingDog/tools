@@ -8,6 +8,8 @@ import xml.etree.ElementTree as ET
 from PIL import Image  
 
 
+LABEL_TRANS = {"坡面冲刷": "slope", "堵塞": "blocking"}
+
 def indent(elem, level=0):
     '''
     美化xml的缩进排版
@@ -43,9 +45,13 @@ def labelme_json_to_pascal_voc(json_filepath, xml_filepath, resize=None):
     ET.SubElement(source, "database").text = "Unknown"  
   
     # 添加图像尺寸  
-    size = ET.SubElement(root, "size")  
-    ET.SubElement(size, "width").text = str(data['imageWidth'])  
-    ET.SubElement(size, "height").text = str(data['imageHeight'])  
+    size = ET.SubElement(root, "size")
+    if resize:
+        ET.SubElement(size, "width").text = str(resize[0])  
+        ET.SubElement(size, "height").text = str(resize[1])
+    else:
+        ET.SubElement(size, "width").text = str(data['imageWidth'])  
+        ET.SubElement(size, "height").text = str(data['imageHeight'])  
     ET.SubElement(size, "depth").text = "3"
 
     # 添加segmented
@@ -53,8 +59,11 @@ def labelme_json_to_pascal_voc(json_filepath, xml_filepath, resize=None):
 
     # 添加标注的对象  
     for shape in data['shapes']:  
-        obj = ET.SubElement(root, "object")  
-        ET.SubElement(obj, "name").text = shape['label']
+        obj = ET.SubElement(root, "object")
+        name = shape["label"]
+        if name not in LABEL_TRANS:
+            continue
+        ET.SubElement(obj, "name").text = LABEL_TRANS[name]
         ET.SubElement(obj, "pose").text = "Unspecified"
         ET.SubElement(obj, "truncated").text = "0"
         ET.SubElement(obj, "difficult").text = "0"
@@ -93,7 +102,7 @@ def jsondir2vocdir(src_dir, dst_dir, copy=True, resize=None):
     if not os.path.exists(dst_dir):
         os.makedirs(dst_dir)
     for json_path in tqdm(glob.glob(src_dir)):
-        img_path = json_path.replace("json", "jpg")
+        img_path = json_path.replace("json", "png")
         if copy:
             filename = os.path.split(img_path)[-1]
             if resize:
@@ -109,8 +118,8 @@ def jsondir2vocdir(src_dir, dst_dir, copy=True, resize=None):
 
 if __name__=="__main__":
     parser = argparse.ArgumentParser(description='convert labelme to labelImg.')  
-    parser.add_argument('--json_dir', type=str, default="test_labelme/*.json", help='json文件夹路径')
-    parser.add_argument('--xml_dir', type=str, default="temp/", help='需要保存的xml文件夹路径')  
+    parser.add_argument('--json_dir', type=str, default="D:/dataset/slope/slope-data-val/*.json", help='json文件夹路径')
+    parser.add_argument('--xml_dir', type=str, default="D:/dataset/slope/slope-data-val_xml/", help='需要保存的xml文件夹路径')  
     parser.add_argument('--copy', type=bool, default=True, help='是否把图像copy到新的文件夹，与保存的xml文件同个文件夹')
     parser.add_argument('--resize', default=(1920, 1080), help="是否在copy时把图像resize到指定尺寸, 标注文件也等比缩放")  
     
